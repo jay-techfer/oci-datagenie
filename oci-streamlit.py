@@ -65,6 +65,10 @@ import oracledb
 import pandas as pd
 import oci
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
+import re
 import time
 import json
 import os
@@ -72,6 +76,7 @@ import time
 from datetime import datetime, date
 from oci.generative_ai_inference import GenerativeAiInferenceClient
 from oci.generative_ai_inference.models import ChatDetails, OnDemandServingMode, CohereChatRequest
+
 
 DB_USER = "DEMOUSER"
 DB_PASSWORD = "Nuvm@db2025!"
@@ -83,7 +88,7 @@ ENDPOINT = "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com"
 MODEL_ID = "ocid1.generativeaimodel.oc1.us-chicago-1.amaaaaaask7dceyapnibwg42qjhwaxrlqfpreueirtwghiwvv2whsnwmnlva"
 
 CONFIG_PROFILE = "DEFAULT"
-config_path = "/home/opc/Oracle_Nuvama_UseCase/.oci.config"
+config_path = "/home/opc/.oci/config"
 config = oci.config.from_file(
     file_location=config_path, profile_name=CONFIG_PROFILE)
 
@@ -159,11 +164,11 @@ def fetch_schema():
                 cursor.execute(query)
                 rows = cursor.fetchall()
                 connection.commit()
-                print("rows", rows)
+                # print("rows", rows)
                 # Convert to DataFrame
                 df = pd.DataFrame(
                     rows, columns=["TABLE_NAME", "COLUMN_NAME", "DATA_TYPE"])
-                print("df.........", df)
+                # print("df.........", df)
 
                 return df
 
@@ -203,19 +208,19 @@ def execute_generated_sql(generated_sql: str):
 def detect_mode(user_text: str) -> str:
     global COMPARTMENT_ID
     classification_prompt = f"""
-You are an intent classifier.
-The user said: "{user_text}"
-Detects the intent of the user input and classifies it into one of the following:
-Classify the intent into one of the following categories:
+    You are an intent classifier.
+    The user said: "{user_text}"
+    Detects the intent of the user input and classifies it into one of the following:
+    Classify the intent into one of the following categories:
 
-- "Query": When the user asks for raw data, SQL, data fetching, tables, aggregations, or database queries.
-- "Descriptive": When the user wants summaries, facts, trends, or general descriptions about what the data shows.
-- "Diagnostic": When the user wants explanations or reasons behind data trends or results.
-- "Predictive": When the user asks for forecasts or predictions based on data.
-- "Prescriptive": When the user wants actionable suggestions, decisions, or recommendations based on the data
-DO NOT GIVE PYTHON CODE.
-Output ONLY one of the following words: Query, Descriptive, Diagnostic, Predictive, Prescriptive.
-    """
+    - "Query": When the user asks for raw data, SQL, data fetching, tables, aggregations, or database queries.
+    - "Descriptive": When the user wants summaries, facts, trends, or general descriptions about what the data shows.
+    - "Diagnostic": When the user wants explanations or reasons behind data trends or results.
+    - "Predictive": When the user asks for forecasts or predictions based on data.
+    - "Prescriptive": When the user wants actionable suggestions, decisions, or recommendations based on the data
+    DO NOT GIVE PYTHON CODE.
+    Output ONLY one of the following words: Query, Descriptive, Diagnostic, Predictive, Prescriptive.
+        """
 
     # Prepare GenAI request
     chat_request = CohereChatRequest(
@@ -245,6 +250,59 @@ Output ONLY one of the following words: Query, Descriptive, Diagnostic, Predicti
 
     raise ValueError("Could not extract intent from OCI GenAI response")
 
+def ask_oci_genai_for_chart(chart_prompt: str, x_list: list, y_list: list, df_preview: str) -> str:
+    global COMPARTMENT_ID, MODEL_ID, client
+
+    system_prompt = (
+        "You are a Python data visualization assistant. "
+        "Generate Python code to create a chart using Plotly Express or Plotly Graph Objects "
+        "based on the user's request and given DataFrame structure. "
+        "Do not redefine or create the DataFrame; assume it already exists as `df`. "
+        "Output only Python code in a markdown code block."
+    )
+
+    full_prompt = f"""
+    {system_prompt}
+
+    USER REQUEST:
+    {chart_prompt}
+
+    DATAFRAME INFO:
+    {df_preview}
+
+    SELECTED COLUMNS:
+    - X-axis: {x_list}
+    - Y-axis: {y_list}
+
+    Additional Rules:
+    - Drop any rows where X or Y columns are null, NaN, or empty ('').
+    - Integrate widgets if referenced.
+    - Do not include explanations or text outside the code block.
+    """
+
+    chat_request = CohereChatRequest(
+        message=full_prompt,
+        max_tokens=500,
+        temperature=0.4
+    )
+
+    chat_detail = ChatDetails(
+        compartment_id=COMPARTMENT_ID,
+        serving_mode=OnDemandServingMode(model_id=MODEL_ID),
+        chat_request=chat_request
+    )
+
+    response = client.chat(chat_detail)
+    print(response)
+    # Extract response text
+    if hasattr(response.data, "chat_response") and hasattr(response.data.chat_response, "text"):
+        chart_code = response.data.chat_response.text
+        chart_code = chart_code.replace("```python", "").replace("```", "").strip()
+        print("Generated chart code:\n", chart_code)
+        return chart_code
+
+    raise ValueError("Could not extract chart code from OCI GenAI response")
+
 
 def build_chat_context():
     conversation = []
@@ -269,17 +327,17 @@ def ask_oci_genai_for_sql(user_question: str, schema_text: str) -> str:
     )
 
     full_prompt = f"""
-{system_prompt}
+    {system_prompt}
 
-CONVERSATION HISTORY:
-{history_text}
+    CONVERSATION HISTORY:
+    {history_text}
 
-SCHEMA:
-{schema_text}
+    SCHEMA:
+    {schema_text}
 
-USER QUESTION:
-{user_question}
-"""
+    USER QUESTION:
+    {user_question}
+    """
 
     chat_request = CohereChatRequest(
         message=full_prompt,
@@ -319,28 +377,28 @@ def analyze_data_with_genai(df: pd.DataFrame, user_question: str, mode: str) -> 
     data_sample = df.to_markdown(index=False)
 
     system_prompt = f"""
-You are a highly skilled Data Analyst.
-You are provided with a dataset and a user's question.
+    You are a highly skilled Data Analyst.
+    You are provided with a dataset and a user's question.
 
-Mode: {mode}
+    Mode: {mode}
 
-Guidelines:
-- If mode is 'Descriptive': summarize what the data shows (e.g., key trends, averages, patterns).
-- If mode is 'Diagnostic': explain why certain trends or anomalies exist.
-- If mode is 'Predictive': make logical predictions based on the data.
-- If mode is 'Prescriptive': suggest data-driven recommendations or next actions.
-- Respond in a concise, human-readable format (no code unless asked).
-"""
+    Guidelines:
+    - If mode is 'Descriptive': summarize what the data shows (e.g., key trends, averages, patterns).
+    - If mode is 'Diagnostic': explain why certain trends or anomalies exist.
+    - If mode is 'Predictive': make logical predictions based on the data.
+    - If mode is 'Prescriptive': suggest data-driven recommendations or next actions.
+    - Respond in a concise, human-readable format (no code unless asked).
+    """
 
     full_prompt = f"""
-{system_prompt}
+    {system_prompt}
 
-DATA
-{data_sample}
+    DATA
+    {data_sample}
 
-USER QUESTION:
-{user_question}
-"""
+    USER QUESTION:
+    {user_question}
+    """
 
     chat_request = CohereChatRequest(
         message=full_prompt,
@@ -372,9 +430,10 @@ if "last_query" not in st.session_state:
 if "last_query_columns" not in st.session_state:
     st.session_state.last_query_columns = []
 
+m_p = st.empty()
 with st.sidebar:
     st.markdown("""
-    <h1 style='font-size: 40px; color: #2C3E50; margin-bottom: 10px;'>DataGenie</h1>
+    <h1 style='font-size: 40px; color: #2C3E50; margin-bottom: 10px;'>23AI Chat</h1>
     """, unsafe_allow_html=True)
 
     if not st.session_state.query_result_df.empty:
@@ -384,22 +443,22 @@ with st.sidebar:
 
         # === Initialize States ===
         if "active_tab" not in st.session_state:
-            st.session_state.active_tab = "data"
+            st.session_state.active_tab = "viz"
         if "chart_metadata" not in st.session_state:
             st.session_state["chart_metadata"] = []
 
         # === Tab Buttons ===
-        colA, colB = st.columns([1, 4])
-        with colA:
-            if st.button("📊 Data"):
-                st.session_state.active_tab = "data"
+        colB,colA = st.columns([1, 1])
+        # with colA:
+        #     if st.button("📊 Data"):
+        #         st.session_state.active_tab = "data"
         with colB:
             if st.button("📈 Visualize"):
                 st.session_state.active_tab = "viz"
 
         # === Data Tab ===
-        if st.session_state.active_tab == "data":
-            st.dataframe(new_df1)
+        # if st.session_state.active_tab == "data":
+        #     st.dataframe(new_df1)
 
         # === Visualization Tab ===
         if st.session_state.active_tab == "viz":
@@ -428,8 +487,7 @@ with st.sidebar:
 
             if st.button("🎨 Create Chart"):
                 if not x_axis_cols or not y_axis_cols or not chart_prompt:
-                    st.warning(
-                        "Select X & Y columns and enter chart description.")
+                    st.warning("Select X & Y columns and enter chart description.")
                 else:
                     st.session_state["x_axis_cols"] = x_axis_cols
                     st.session_state["y_axis_cols"] = y_axis_cols
@@ -438,33 +496,29 @@ with st.sidebar:
                     x_list = ", ".join(x_axis_cols)
                     y_list = ", ".join(y_axis_cols)
 
-                    chart_gen_prompt = f"""
-                        You are a Python data visualization assistant.
+                    try:
+                        chart_response = ask_oci_genai_for_chart(
+                            chart_prompt=chart_prompt,
+                            x_list=x_list,
+                            y_list=y_list,
+                            df_preview=str(new_df1.head(3))
+                        )
 
-                        The user wants a chart based on this request: {chart_prompt}
+                        # Extract Python code
+                        chart_code_match = re.search(r"```python(.*?)```", chart_response, re.DOTALL)
+                        if chart_code_match:
+                            st.session_state["generated_chart_code"] = chart_code_match.group(1).strip()
+                        else:
+                            st.session_state["generated_chart_code"] = chart_response.strip()
 
-                        Selected columns from the DataFrame named `df`:
-                        - X-axis: {x_list}
-                        - Y-axis: {y_list}
+                        st.success("✅ Chart code generated successfully!")
 
-                        Instructions:
-                        - Use the existing DataFrame `df` as-is. Do not create or redefine `df` or generate any mock/sample data.
-                        - Use Plotly Express or Plotly Graph Objects.
-                        - If widgets are selected, integrate them.
-                        - Before plotting, drop any rows where required columns (like X, Y, hierarchy path, or value columns) are null, NaN, or blank strings ('').
-                        - Output only the Python code inside a markdown code block.
-                        """
+                        # ✅ Execute the chart code with df in scope
+                        local_vars = {"df": df, "st": st, "px": __import__("plotly.express")}
+                        exec(st.session_state["generated_chart_code"], {}, local_vars)
 
-                    response = model.generate_content(chart_gen_prompt).text
-                    print("chart code : ", response)
-                    chart_code = re.search(
-                        r"```python(.*?)```", response, re.DOTALL)
-
-                    if chart_code:
-                        st.session_state["generated_chart_code"] = chart_code.group(
-                            1).strip()
-                    else:
-                        st.error("⚠️ Couldn't parse chart code.")
+                    except Exception as e:
+                        st.error(f"⚠️ Error generating/executing chart code: {e}")
 
             # === Create & Store Charts ===
             if "generated_chart_code" in st.session_state:
@@ -495,6 +549,8 @@ with st.sidebar:
 
                 except Exception as e:
                     st.error("❌ Chart rendering failed.")
+                    time.sleep(5)
+                    m_p.empty()
                     st.exception(e)
 
             if st.session_state["chart_metadata"]:
@@ -555,7 +611,7 @@ if "schema_text" not in st.session_state:
     time.sleep(2)
     msg.empty()
 
-st.title("NUVAMA chat ✅")
+# st.title("NUVAMA chat ✅")
 
 # Chat input
 user_input = st.chat_input("Ask your question here:")
@@ -581,8 +637,7 @@ if user_input:
                 {"role": "assistant", "message": "✅ Data extracted successfully."})
             # Optionally show small preview of results
             st.session_state.chat_history.append(
-                {"role": "assistant", "message": result_df.head(
-                    5).to_markdown(index=False)}
+                {"role": "assistant", "message": result_df}
             )
 
     else:
