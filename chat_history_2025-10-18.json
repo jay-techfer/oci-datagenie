@@ -1,0 +1,94 @@
+{
+    "jay": [
+        {
+            "role": "user",
+            "message": "give me data from 4 am on word for  today"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE SCRAPED_DATETIME >= TO_TIMESTAMP(TO_CHAR(TRUNC(SYSDATE), 'YYYY-MM-DD') || ' 04:00:00', 'YYYY-MM-DD HH24:MI:SS')\n  AND SCRAPED_DATETIME < TO_TIMESTAMP(TO_CHAR(TRUNC(SYSDATE) + 1, 'YYYY-MM-DD') || ' 04:00:00', 'YYYY-MM-DD HH24:MI:SS');"
+        },
+        {
+            "role": "user",
+            "message": "give me data after 4 am "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE EXTRACT(HOUR FROM CREATED_DATE) > 4;"
+        },
+        {
+            "role": "user",
+            "message": "give me data after 4 am"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE EXTRACT(HOUR FROM CREATED_DATE) > 4;"
+        }
+    ],
+    "admin": [
+        {
+            "role": "user",
+            "message": "give me data after 4 am"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE EXTRACT(HOUR FROM CREATED_DATE) >= 4;"
+        },
+        {
+            "role": "user",
+            "message": "give me avg of hotel price from all location from the data fetch after 10 am "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(ORIGINAL_PRICE) AS avg_price\nFROM \n    SCRAPED_DATA\nWHERE \n    EXTRACT(HOUR FROM SCRAPED_DATETIME) >= 10\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "ok just give me after 6 am "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(ORIGINAL_PRICE) AS avg_price\nFROM \n    SCRAPED_DATA\nWHERE \n    EXTRACT(HOUR FROM SCRAPED_DATETIME) >= 6\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "after 4 am "
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "give me avg of hotel price from all location from the data fetch after 12 am"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(ORIGINAL_PRICE) AS avg_price\nFROM \n    SCRAPED_DATA\nWHERE \n    EXTRACT(HOUR FROM SCRAPED_DATETIME) >= 12\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotel count per location "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    COUNT(DISTINCT HOTEL_NAME) AS hotel_count\nFROM \n    SCRAPED_DATA\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "ok waht do you think which location have more hotel "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    COUNT(DISTINCT HOTEL_NAME) AS hotel_count\nFROM \n    SCRAPED_DATA\nGROUP BY \n    LOCATION\nORDER BY \n    hotel_count DESC\nFETCH FIRST 1 ROW ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "ok can you tell me why jaipur have this much hotel "
+        },
+        {
+            "role": "assistant",
+            "message": "**Diagnostic Analysis:**\n\nThe dataset indicates that Jaipur has 10 hotels. However, the provided data alone does not offer sufficient context to explain *why* Jaipur has this number of hotels. To diagnose the reason, additional information would be necessary, such as:\n\n1. **Tourism Demand**: Jaipur is a popular tourist destination known for its historical sites (e.g., Hawa Mahal, Amber Fort). High tourist footfall could drive the need for more hotels.  \n2. **Population and Events**: A large local population or frequent events (e.g., weddings, conferences) might increase hotel demand.  \n3. **Economic Factors**: A thriving economy or government incentives for hospitality businesses could encourage hotel construction.  \n4. **Competitive Landscape**: If Jaipur has fewer hotels compared to similar cities, this number might reflect limited competition or regulatory constraints.  \n\nWithout this additional context, the exact reason for Jaipur having 10 hotels remains speculative. Further data on tourism, demographics, or economic policies would be required for a definitive diagnosis."
+        }
+    ]
+}
