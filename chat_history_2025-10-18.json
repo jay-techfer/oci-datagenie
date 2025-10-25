@@ -89,6 +89,88 @@
         {
             "role": "assistant",
             "message": "**Diagnostic Analysis:**\n\nThe dataset indicates that Jaipur has 10 hotels. However, the provided data alone does not offer sufficient context to explain *why* Jaipur has this number of hotels. To diagnose the reason, additional information would be necessary, such as:\n\n1. **Tourism Demand**: Jaipur is a popular tourist destination known for its historical sites (e.g., Hawa Mahal, Amber Fort). High tourist footfall could drive the need for more hotels.  \n2. **Population and Events**: A large local population or frequent events (e.g., weddings, conferences) might increase hotel demand.  \n3. **Economic Factors**: A thriving economy or government incentives for hospitality businesses could encourage hotel construction.  \n4. **Competitive Landscape**: If Jaipur has fewer hotels compared to similar cities, this number might reflect limited competition or regulatory constraints.  \n\nWithout this additional context, the exact reason for Jaipur having 10 hotels remains speculative. Further data on tourism, demographics, or economic policies would be required for a definitive diagnosis."
+        },
+        {
+            "role": "user",
+            "message": "give me the data of hotel from delhi "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    sd.* \nFROM \n    SCRAPED_DATA sd\nJOIN \n    HOTEL_MAPPING hm \nON \n    sd.CLIENT_HOTEL_ID = hm.CLIENT_HOTEL_ID\nWHERE \n    hm.SITE_HOTEL_NAME LIKE '%Delhi%' \n    OR sd.LOCATION LIKE '%Delhi%';"
+        },
+        {
+            "role": "user",
+            "message": "ok as per the hotel name show me the avg price per hotel "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    hm.SITE_HOTEL_NAME AS HOTEL_NAME,\n    AVG(sd.ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA sd\nJOIN \n    HOTEL_MAPPING hm \nON \n    sd.CLIENT_HOTEL_ID = hm.CLIENT_HOTEL_ID\nWHERE \n    hm.SITE_HOTEL_NAME LIKE '%Delhi%' \n    OR sd.LOCATION LIKE '%Delhi%'\nGROUP BY \n    hm.SITE_HOTEL_NAME\nORDER BY \n    hm.SITE_HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "ok m=so my over all budget for vacation is about 65k to 70k and i leave in punjab which hotel will you recommend me "
+        },
+        {
+            "role": "assistant",
+            "message": "Based on your budget of \u20b965,000 to \u20b970,000 and considering you're traveling from Punjab, here are my recommendations:\n\n1. **Ginger East Delhi** (\u20b95,540.46 avg/night)  \n   - **Why**: Most budget-friendly option, leaving ample funds for other expenses.  \n   - **Note**: Located in East Delhi, ensure it aligns with your planned activities.  \n\n2. **Red Fox by Lemon Tree Hotels, East Delhi** (\u20b97,465.35 avg/night)  \n   - **Why**: Slightly higher than Ginger but still affordable, with better amenities.  \n\n3. **Taj Surajkund Resort & Spa, Delhi NCR** (\u20b913,527.4 avg/night)  \n   - **Why**: Mid-range luxury option if you prefer a premium experience.  \n   - **Note**: Located in NCR (Haryana), check travel convenience from Punjab.  \n\n4. **Ginger Delhi, Chanakyapuri** (\u20b912,066.6 avg/night)  \n   - **Why**: Centrally located in Chanakyapuri, ideal for exploring Delhi.  \n\n**Recommendation**:  \n- **Best Value**: **Ginger East Delhi** or **Red Fox East Delhi** for maximum savings.  \n- **Upgrade Option**: **Taj Surajkund Resort** for a luxurious stay within budget.  \n- **Central Location**: **Ginger Chanakyapuri** if proximity to Delhi\u2019s attractions is key.  \n\n**Next Steps**:  \n- Verify current prices (data may be outdated).  \n- Check proximity to your planned activities or transport hubs.  \n- Book early for better deals, especially if traveling during peak season."
+        }
+    ],
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "Please share data of hotel"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    hm.CLIENT_HOTEL_ID, \n    hm.CLIENT_HOTEL_NAME, \n    hm.SITE_HOTEL_NAME, \n    sd.HOTEL_NAME, \n    sd.FULL_PROPERTY_NAME, \n    sd.LOCATION, \n    sd.ROOM_TYPE, \n    sd.OCCUPANCY, \n    sd.INCLUSIONS, \n    sd.ORIGINAL_PRICE, \n    sd.DISCOUNTED_PRICE, \n    sd.AVAILABILITY, \n    sd.CHANNEL, \n    TO_CHAR(sd.CHECK_IN_DATE, 'YYYY-MM-DD') AS CHECK_IN_DATE, \n    TO_CHAR(sd.CHECK_OUT_DATE, 'YYYY-MM-DD') AS CHECK_OUT_DATE, \n    TO_CHAR(sd.CREATED_DATE, 'YYYY-MM-DD HH24:MI:SS') AS CREATED_DATE, \n    TO_CHAR(sd.SCRAPED_DATETIME, 'YYYY-MM-DD HH24:MI:SS') AS SCRAPED_DATETIME\nFROM \n    HOTEL_MAPPING hm\nLEFT JOIN \n    SCRAPED_DATA sd \nON \n    hm.CLIENT_HOTEL_ID = sd.CLIENT_HOTEL_ID\nORDER BY \n    hm.CLIENT_HOTEL_ID, \n    sd.CHECK_IN_DATE;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotels name with price where more than 10% discount is given"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    sd.HOTEL_NAME, \n    sd.ORIGINAL_PRICE, \n    sd.DISCOUNTED_PRICE\nFROM \n    SCRAPED_DATA sd\nWHERE \n    ((sd.ORIGINAL_PRICE - sd.DISCOUNTED_PRICE) / sd.ORIGINAL_PRICE) * 100 > 10\nORDER BY \n    sd.HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel names where location is mumbai and delhi"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.LOCATION IN ('Mumbai', 'Delhi')\nORDER BY sd.HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me total count of hotel in each location"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    sd.LOCATION, \n    COUNT(DISTINCT sd.HOTEL_NAME) AS TOTAL_HOTELS\nFROM \n    SCRAPED_DATA sd\nGROUP BY \n    sd.LOCATION\nORDER BY \n    sd.LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "Provide top cities based on the hotel counts"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    sd.LOCATION, \n    COUNT(DISTINCT sd.HOTEL_NAME) AS TOTAL_HOTELS\nFROM \n    SCRAPED_DATA sd\nGROUP BY \n    sd.LOCATION\nORDER BY \n    TOTAL_HOTELS DESC;"
+        },
+        {
+            "role": "user",
+            "message": "name the hotels which are providing swiming pool"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.INCLUSIONS LIKE '%swimming pool%'\nORDER BY sd.HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "name the hotels which are providing pool"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.INCLUSIONS LIKE '%pool%'\nORDER BY sd.HOTEL_NAME;"
         }
     ]
 }

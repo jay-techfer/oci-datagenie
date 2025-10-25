@@ -354,7 +354,6 @@ def landing_page():
             "Given a database schema, history chat and a user's question, write the best possible SQL query. "
             "When converting dates, always use 24-hour format (HH24) in TO_DATE or TO_TIMESTAMP functions."
             "Output only the SQL query — do not include explanations or text."
-            "Availabilty column have two valuse Available and not available "
 
         )
 
@@ -487,7 +486,6 @@ def landing_page():
         }.items():
             if key not in st.session_state:
                 st.session_state[key] = default
-
         try:
             if not st.session_state.query_result_df.empty:
                 new_df1 = st.session_state.query_result_df.copy()
@@ -671,6 +669,9 @@ def landing_page():
                     st.session_state.pop(key, None)
 
             st.rerun()
+        
+
+            
 
     # Fetch schema once
     if "schema_text" not in st.session_state:

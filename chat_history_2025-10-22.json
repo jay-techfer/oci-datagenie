@@ -1,0 +1,460 @@
+{
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "What are the major cities of hotels\n"
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of  the major cities of hotels\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT LOCATION AS major_cities\nFROM SCRAPED_DATA\nWHERE LOCATION IS NOT NULL\nORDER BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel name whose price is between 5000 and 10,000 for 10th oct   "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000\n  AND sd.CHECK_IN_DATE = TO_DATE('10-OCT-2023', 'DD-MON-YYYY');"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel name whose price is between 5000 and 10,000 for 20th oct   "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000\n  AND sd.CHECK_IN_DATE = TO_DATE('20-OCT-2023', 'DD-MON-YYYY');"
+        },
+        {
+            "role": "user",
+            "message": "Please provide hotel name and price available in Mumbai location  \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME, sd.ORIGINAL_PRICE\nFROM SCRAPED_DATA sd\nWHERE sd.LOCATION = 'Mumbai';"
+        },
+        {
+            "role": "user",
+            "message": "list all unique dates and corresponding average discounted price contained in the dataset\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT TRUNC(sd.CHECK_IN_DATE) AS UNIQUE_DATE, \n       AVG(sd.DISCOUNTED_PRICE) AS AVG_DISCOUNTED_PRICE\nFROM SCRAPED_DATA sd\nGROUP BY TRUNC(sd.CHECK_IN_DATE)\nORDER BY UNIQUE_DATE;"
+        },
+        {
+            "role": "user",
+            "message": "what is daily average hotel price for the next 6 weeks"
+        },
+        {
+            "role": "assistant",
+            "message": "Based on the provided data, the average discounted hotel price shows an upward trend from mid-October to late November 2025, with fluctuations. To predict the daily average hotel price for the next 6 weeks (approximately 42 days), we can extrapolate from the observed trend and recent averages.\n\n**Prediction:**\n1. **Short-term (Next 2 weeks):** Prices are likely to continue rising, reaching around **$21,500\u2013$22,500** per day, given the recent peak of $21,711.3 on 2025-11-06.\n2. **Mid-term (Weeks 3\u20134):** Prices may stabilize or slightly decline due to seasonal fluctuations, averaging **$21,000\u2013$22,000**.\n3. **Long-term (Weeks 5\u20136):** A gradual increase is expected, potentially reaching **$22,000\u2013$23,000**, assuming the upward trend persists.\n\n**Estimated Daily Average for Next 6 Weeks:**  \n**$21,500\u2013$22,500**, with slight variations depending on seasonal demand and market conditions."
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT hm.CLIENT_HOTEL_NAME AS HOTEL_GROUP, \n       COUNT(sd.CLIENT_HOTEL_ID) AS GROUP_COUNT\nFROM HOTEL_MAPPING hm\nJOIN SCRAPED_DATA sd ON hm.CLIENT_HOTEL_ID = sd.CLIENT_HOTEL_ID\nGROUP BY hm.CLIENT_HOTEL_NAME\nORDER BY GROUP_COUNT DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Provide top cities based on the hotel counts"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT sd.LOCATION AS CITY, \n       COUNT(DISTINCT sd.HOTEL_NAME) AS HOTEL_COUNT\nFROM SCRAPED_DATA sd\nGROUP BY sd.LOCATION\nORDER BY HOTEL_COUNT DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel name whose price is between 5000 and 50,000 for 22 oct  "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE BETWEEN 5000 AND 50000\n  AND sd.CHECK_IN_DATE = TO_DATE('22-OCT-2023', 'DD-MON-YYYY');"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel name available for 22 october"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.AVAILABILITY = 'Available'\n  AND sd.CHECK_IN_DATE = TO_DATE('22-OCT-2023', 'DD-MON-YYYY');"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel name whose price is between 5000 and 10,000 for 20th oct 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000\n  AND sd.CHECK_IN_DATE = TO_DATE('20-OCT-2025', 'DD-MON-YYYY');"
+        },
+        {
+            "role": "user",
+            "message": "Can you give hotels that are not available in gujarat for more than 2 consecutive check in dates."
+        },
+        {
+            "role": "assistant",
+            "message": "WITH consecutive_unavailable AS (\n    SELECT \n        sd.HOTEL_NAME,\n        sd.CHECK_IN_DATE,\n        LEAD(sd.CHECK_IN_DATE, 1) OVER (PARTITION BY sd.HOTEL_NAME ORDER BY sd.CHECK_IN_DATE) AS next_check_in_date,\n        LEAD(sd.AVAILABILITY, 1) OVER (PARTITION BY sd.HOTEL_NAME ORDER BY sd.CHECK_IN_DATE) AS next_availability,\n        LEAD(sd.CHECK_IN_DATE, 2) OVER (PARTITION BY sd.HOTEL_NAME ORDER BY sd.CHECK_IN_DATE) AS second_next_check_in_date,\n        LEAD(sd.AVAILABILITY, 2) OVER (PARTITION BY sd.HOTEL_NAME ORDER BY sd.CHECK_IN_DATE) AS second_next_availability\n    FROM \n        SCRAPED_DATA sd\n    WHERE \n        sd.LOCATION LIKE '%Gujarat%'\n),\nunavailable_hotels AS (\n    SELECT \n        HOTEL_NAME\n    FROM \n        consecutive_unavailable\n    WHERE \n        AVAILABILITY = 'Not Available'\n        AND next_availability = 'Not Available'\n        AND second_next_availability = 'Not Available'\n    GROUP BY \n        HOTEL_NAME\n    HAVING \n        COUNT(DISTINCT CHECK_IN_DATE) >= 3\n)\nSELECT DISTINCT uh.HOTEL_NAME\nFROM unavailable_hotels uh;"
+        },
+        {
+            "role": "user",
+            "message": "List down the hotels that have no discount "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE = sd.DISCOUNTED_PRICE;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price  having discount for 20-25th October\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME, sd.ORIGINAL_PRICE, sd.DISCOUNTED_PRICE\nFROM SCRAPED_DATA sd\nWHERE sd.CHECK_IN_DATE BETWEEN TO_DATE('20-OCT-2023', 'DD-MON-YYYY') AND TO_DATE('25-OCT-2023', 'DD-MON-YYYY')\n  AND sd.ORIGINAL_PRICE > sd.DISCOUNTED_PRICE;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price having discount for 20-21th October"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.HOTEL_NAME, sd.ORIGINAL_PRICE, sd.DISCOUNTED_PRICE\nFROM SCRAPED_DATA sd\nWHERE sd.CHECK_IN_DATE BETWEEN TO_DATE('20-OCT-2023', 'DD-MON-YYYY') AND TO_DATE('21-OCT-2023', 'DD-MON-YYYY')\n  AND sd.ORIGINAL_PRICE > sd.DISCOUNTED_PRICE;"
+        },
+        {
+            "role": "user",
+            "message": "Give me hotel which will have standard room in less than 5K"
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "Give me the data of hotel which will have standard room in less than 5K"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM HOTEL_MAPPING h\nJOIN SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\nWHERE s.ROOM_TYPE = 'Standard'\n  AND s.ORIGINAL_PRICE < 5000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me the data of hotel which will have standard room in less than 10K"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM HOTEL_MAPPING h\nJOIN SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\nWHERE s.ROOM_TYPE = 'Standard'\n  AND s.ORIGINAL_PRICE < 10000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me the data of hotel which will have standard room in less than 25 K"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM HOTEL_MAPPING h\nJOIN SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\nWHERE s.ROOM_TYPE = 'Standard'\n  AND s.ORIGINAL_PRICE < 25000;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price  having discount for 20-25th October 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME, s.DISCOUNTED_PRICE\nFROM HOTEL_MAPPING h\nJOIN SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\nWHERE s.CHECK_IN_DATE >= TO_DATE('20-10-2025', 'DD-MM-YYYY')\n  AND s.CHECK_OUT_DATE <= TO_DATE('25-10-2025', 'DD-MM-YYYY')\n  AND s.DISCOUNTED_PRICE IS NOT NULL\n  AND s.DISCOUNTED_PRICE < s.ORIGINAL_PRICE;"
+        },
+        {
+            "role": "user",
+            "message": "List down the hotels that have no discount"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM HOTEL_MAPPING h\nJOIN SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\nWHERE s.DISCOUNTED_PRICE IS NULL\nOR s.DISCOUNTED_PRICE = s.ORIGINAL_PRICE;"
+        },
+        {
+            "role": "user",
+            "message": "Can you give hotels that are not available in gujarat for more than 2 consecutive check in dates."
+        },
+        {
+            "role": "assistant",
+            "message": "WITH ConsecutiveDates AS (\n    SELECT \n        h.CLIENT_HOTEL_NAME,\n        h.SITE_HOTEL_NAME,\n        s.CHECK_IN_DATE,\n        LEAD(s.CHECK_IN_DATE, 1) OVER (PARTITION BY h.CLIENT_HOTEL_ID ORDER BY s.CHECK_IN_DATE) AS NEXT_CHECK_IN_DATE,\n        LEAD(s.CHECK_IN_DATE, 2) OVER (PARTITION BY h.CLIENT_HOTEL_ID ORDER BY s.CHECK_IN_DATE) AS NEXT_NEXT_CHECK_IN_DATE\n    FROM \n        HOTEL_MAPPING h\n    JOIN \n        SCRAPED_DATA s ON h.CLIENT_HOTEL_ID = s.CLIENT_HOTEL_ID\n    WHERE \n        s.AVAILABILITY = 'Not Available'\n        AND s.LOCATION != 'Gujarat'\n),\nConsecutiveGroups AS (\n    SELECT \n        CLIENT_HOTEL_NAME,\n        SITE_HOTEL_NAME,\n        CHECK_IN_DATE,\n        NEXT_CHECK_IN_DATE,\n        NEXT_NEXT_CHECK_IN_DATE,\n        ROW_NUMBER() OVER (PARTITION BY CLIENT_HOTEL_NAME ORDER BY CHECK_IN_DATE) AS rn\n    FROM \n        ConsecutiveDates\n    WHERE \n        NEXT_CHECK_IN_DATE IS NOT NULL\n        AND NEXT_NEXT_CHECK_IN_DATE IS NOT NULL\n        AND NEXT_CHECK_IN_DATE = CHECK_IN_DATE + 1\n        AND NEXT_NEXT_CHECK_IN_DATE = CHECK_IN_DATE + 2\n)\nSELECT DISTINCT\n    CLIENT_HOTEL_NAME,\n    SITE_HOTEL_NAME\nFROM \n    ConsecutiveGroups\nWHERE \n    rn = 1;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA s\nJOIN HOTEL_MAPPING h ON s.CLIENT_HOTEL_ID = h.CLIENT_HOTEL_ID\nWHERE s.CHECK_IN_DATE = TO_DATE('20-10-2025', 'DD-MM-YYYY')\n  AND s.ORIGINAL_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without duplicate column "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT s.*, h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM SCRAPED_DATA s\nJOIN HOTEL_MAPPING h ON s.CLIENT_HOTEL_ID = h.CLIENT_HOTEL_ID\nWHERE s.CHECK_IN_DATE = TO_DATE('20-10-2025', 'DD-MM-YYYY')\n  AND s.ORIGINAL_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without dublicate columns"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT s.*, h.CLIENT_HOTEL_NAME, h.SITE_HOTEL_NAME\nFROM SCRAPED_DATA s\nJOIN HOTEL_MAPPING h ON s.CLIENT_HOTEL_ID = h.CLIENT_HOTEL_ID\nWHERE s.CHECK_IN_DATE = TO_DATE('20-10-2025', 'DD-MM-YYYY')\n  AND s.ORIGINAL_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any dublicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT sd.*\nFROM SCRAPED_DATA sd\nWHERE sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000\n  AND sd.CHECK_IN_DATE <= TO_DATE('2025-10-20', 'YYYY-MM-DD')\n  AND sd.CHECK_OUT_DATE >= TO_DATE('2025-10-20', 'YYYY-MM-DD');"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price having discount for 20-25th October 2025\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT hm.CLIENT_HOTEL_NAME, sd.DISCOUNTED_PRICE\nFROM SCRAPED_DATA sd\nJOIN HOTEL_MAPPING hm ON sd.CLIENT_HOTEL_ID = hm.CLIENT_HOTEL_ID\nWHERE sd.CHECK_IN_DATE = TO_DATE('20-10-2025', 'DD-MM-YYYY')\nAND sd.CHECK_OUT_DATE = TO_DATE('25-10-2025', 'DD-MM-YYYY')\nAND sd.DISCOUNTED_PRICE IS NOT NULL;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price having discount for 20-25th October 2025 as per check in date \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT hm.CLIENT_HOTEL_NAME, sd.DISCOUNTED_PRICE\nFROM SCRAPED_DATA sd\nJOIN HOTEL_MAPPING hm ON sd.CLIENT_HOTEL_ID = hm.CLIENT_HOTEL_ID\nWHERE sd.CHECK_IN_DATE >= TO_DATE('20-10-2025', 'DD-MM-YYYY')\nAND sd.CHECK_IN_DATE < TO_DATE('26-10-2025', 'DD-MM-YYYY')\nAND sd.DISCOUNTED_PRICE IS NOT NULL;"
+        },
+        {
+            "role": "user",
+            "message": "can you please discribe this data for "
+        },
+        {
+            "role": "assistant",
+            "message": "This dataset provides information about hotel prices across various locations, primarily in India, with some international entries. Here's a descriptive summary:\n\n**Key Observations:**\n\n* **Wide Price Range:** Prices vary significantly, ranging from as low as \u20b91,721 (Taj Mahal - Gomti Nagar, Lucknow) to \u20b9169,105 (The Oberoi, Marrakech, Morocco).\n * **Luxury Brands Dominate:**  Many entries belong to luxury hotel chains like Taj, Oberoi, ITC, and Marriott, reflecting higher price points.\n * **Location Impact:** Prices are heavily influenced by location.  Hotels in popular tourist destinations like Goa, Jaipur, and Mumbai tend to be more expensive.\n * **Resort Premiums:**  Resorts, particularly beach resorts, generally command higher prices compared to city hotels.\n * **International Variation:** International hotels, especially in Dubai and Southeast Asia, show a wide range of prices, with some being comparable to Indian luxury hotels and others significantly more expensive.\n ** **\n\n**Specific Trends:**\n\n* **Taj Hotels:**  Taj properties exhibit a broad price spectrum, with budget-friendly options like Taj Club House, Chennai (\u20b95,500) and luxury resorts like Taj Exotica Resort & Spa, Andamans (\u20b983,401).\n\n* **Oberoi Hotels:** Oberoi hotels consistently appear in the higher price bracket, reflecting their reputation for luxury and exclusivity.\n\n* **Marriott Hotels:** Marriott offers a mix of mid-range and luxury options, with prices varying based on location and brand within the Marriott portfolio.\n\n**Further Analysis:**\n\nTo gain deeper insights, additional analysis could be conducted, such as:\n * **Price Comparison by City:** Analyzing average prices in different cities to identify the most and least expensive destinations.\n * **Seasonal Variations:** Examining price fluctuations throughout the year to understand peak and off-peak seasons.\n * **Correlation with Amenities:** Investigating the relationship between price and amenities offered by hotels.\n * **Market Segmentation:** Categorizing hotels based on price, location, and brand to identify target markets."
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    CASE \n        WHEN CLIENT_HOTEL_NAME LIKE '%Taj%' THEN 'Taj'\n        WHEN CLIENT_HOTEL_NAME LIKE '%ITC%' THEN 'ITC'\n        WHEN CLIENT_HOTEL_NAME LIKE '%Oberoi%' THEN 'Oberoi'\n        ELSE 'Other'\n    END AS HOTEL_GROUP,\n    COUNT(*) AS GROUP_COUNT\nFROM HOTEL_MAPPING\nGROUP BY \n    CASE \n        WHEN CLIENT_HOTEL_NAME LIKE '%Taj%' THEN 'Taj'\n        WHEN CLIENT_HOTEL_NAME LIKE '%ITC%' THEN 'ITC'\n        WHEN CLIENT_HOTEL_NAME LIKE '%Oberoi%' THEN 'Oberoi'\n        ELSE 'Other'\n    END\nORDER BY GROUP_COUNT DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(SITE_HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*') AS hotel_group,\n    COUNT(*) AS group_count\nFROM \n    HOTEL_MAPPING\nGROUP BY \n    REGEXP_SUBSTR(SITE_HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*')\nORDER BY \n    group_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "can you give me an basic discription of this data"
+        },
+        {
+            "role": "assistant",
+            "message": "This dataset provides a count of hotels grouped by their associated hotel group or brand. Here\u2019s a basic description:\n\n1. **Top Hotel Groups**: The data shows that **Ginger** and **Taj** are the most prominent hotel groups, with 64 and 63 hotels respectively. They are followed by **The** (38 hotels) and **Lemon** (26 hotels).\n\n2. **Mid-Range Groups**: Several hotel groups, such as **Vivanta** (25 hotels), **Gateway** (10 hotels), and **Trident** (8 hotels), have a moderate presence.\n\n3. **Smaller Groups**: Many hotel groups have only a few hotels, with counts ranging from 1 to 7. Examples include **Marriott**, **Holiday**, **Red** (each with 7 hotels), and numerous others with just 1 hotel.\n\n4. **Long Tail**: A significant portion of the dataset consists of hotel groups with only 1 hotel, indicating a large number of smaller or independent brands.\n\n5. **Total Hotels**: The dataset covers a wide range of hotel groups, from major chains to single-property brands, reflecting diversity in the hospitality industry.\n\nIn summary, the data highlights a concentration of hotels in a few major groups, with a long tail of smaller or independent brands."
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT \n    sd.* \nFROM \n    SCRAPED_DATA sd\nWHERE \n    sd.CHECK_IN_DATE = TO_DATE('20-OCT-2025', 'DD-MON-YYYY') \n    AND sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][^ ]+') AS hotel_group,\n    COUNT(*) AS hotel_count\nFROM \n    HOTEL_MAPPING hm\nGROUP BY \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][^ ]+')\nORDER BY \n    hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(SITE_HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*') AS hotel_group,\n    COUNT(*) AS group_count\nFROM \n    HOTEL_MAPPING\nGROUP BY \n    REGEXP_SUBSTR(SITE_HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*')\nORDER BY \n    group_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT *\nFROM SCRAPED_DATA\nWHERE \n    DISCOUNTED_PRICE BETWEEN 5000 AND 10000\n    AND CHECK_IN_DATE <= TO_DATE('2025-10-20', 'YYYY-MM-DD')\n    AND CHECK_OUT_DATE >= TO_DATE('2025-10-20', 'YYYY-MM-DD');"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?') AS hotel_group,\n    COUNT(DISTINCT hm.CLIENT_HOTEL_ID) AS hotel_count\nFROM \n    HOTEL_MAPPING hm\nGROUP BY \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?')\nORDER BY \n    hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?') AS hotel_group,\n    COUNT(DISTINCT hm.CLIENT_HOTEL_ID) AS hotel_count\nFROM \n    HOTEL_MAPPING hm\nWHERE \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?') IS NOT NULL\nGROUP BY \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?')\nHAVING \n    COUNT(DISTINCT hm.CLIENT_HOTEL_ID) > 0\nORDER BY \n    hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT \n    sd.*\nFROM \n    SCRAPED_DATA sd\nWHERE \n    sd.ORIGINAL_PRICE BETWEEN 5000 AND 10000\n    AND sd.CHECK_IN_DATE = TO_DATE('2025-10-20', 'YYYY-MM-DD')\n    AND NOT EXISTS (\n        SELECT 1\n        FROM SCRAPED_DATA sd2\n        WHERE sd2.CLIENT_HOTEL_ID = sd.CLIENT_HOTEL_ID\n        AND sd2.CHECK_IN_DATE = sd.CHECK_IN_DATE\n        AND sd2.ROOM_TYPE = sd.ROOM_TYPE\n        AND (sd2.ORIGINAL_PRICE <> sd.ORIGINAL_PRICE OR sd2.DISCOUNTED_PRICE <> sd.DISCOUNTED_PRICE)\n    );"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?') AS hotel_group,\n    COUNT(DISTINCT hm.CLIENT_HOTEL_ID) AS hotel_count\nFROM \n    HOTEL_MAPPING hm\nWHERE \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?') IS NOT NULL\nGROUP BY \n    REGEXP_SUBSTR(hm.CLIENT_HOTEL_NAME, '[A-Z][a-z]+([\\s][A-Z][a-z]+)?')\nHAVING \n    COUNT(DISTINCT hm.CLIENT_HOTEL_ID) > 0\nORDER BY \n    hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*') AS hotel_group,\n    COUNT(*) AS group_count\nFROM \n    SCRAPED_DATA\nGROUP BY \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*')\nORDER BY \n    group_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT *\nFROM SCRAPED_DATA\nWHERE DISCOUNTED_PRICE BETWEEN 5000 AND 10000\n  AND CHECK_IN_DATE <= TO_DATE('2025-10-20', 'YYYY-MM-DD')\n  AND CHECK_OUT_DATE >= TO_DATE('2025-10-20', 'YYYY-MM-DD');"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*') AS hotel_group,\n    COUNT(*) AS group_count\nFROM \n    SCRAPED_DATA\nGROUP BY \n    REGEXP_SUBSTR(HOTEL_NAME, '[A-Z][a-z]+(?:\\s[A-Z][a-z]+)*')\nORDER BY \n    group_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT *\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE <= TO_DATE('20.10.2025', 'DD.MM.YYYY')\n  AND CHECK_OUT_DATE >= TO_DATE('20.10.2025', 'DD.MM.YYYY')\n  AND ORIGINAL_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025 without any duplicate column"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT *\nFROM SCRAPED_DATA\nWHERE DISCOUNTED_PRICE BETWEEN 5000 AND 10000\n  AND CHECK_IN_DATE <= TO_DATE('2025-10-20', 'YYYY-MM-DD')\n  AND CHECK_OUT_DATE >= TO_DATE('2025-10-20', 'YYYY-MM-DD');"
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT *\nFROM SCRAPED_DATA\nWHERE DISCOUNTED_PRICE BETWEEN 5000 AND 10000\n  AND CHECK_IN_DATE <= TO_DATE('2025-10-20', 'YYYY-MM-DD')\n  AND CHECK_OUT_DATE >= TO_DATE('2025-10-20', 'YYYY-MM-DD');"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc.\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    CASE \n        WHEN HOTEL_NAME LIKE '%Taj%' THEN 'Taj'\n        WHEN HOTEL_NAME LIKE '%ITC%' THEN 'ITC'\n        WHEN HOTEL_NAME LIKE '%Oberoi%' THEN 'Oberoi'\n        ELSE 'Other'\n    END AS HOTEL_GROUP,\n    COUNT(*) AS GROUP_COUNT\nFROM SCRAPED_DATA\nGROUP BY \n    CASE \n        WHEN HOTEL_NAME LIKE '%Taj%' THEN 'Taj'\n        WHEN HOTEL_NAME LIKE '%ITC%' THEN 'ITC'\n        WHEN HOTEL_NAME LIKE '%Oberoi%' THEN 'Oberoi'\n        ELSE 'Other'\n    END\nORDER BY GROUP_COUNT DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[^,]+', 1, 1) AS hotel_group,\n    COUNT(*) AS group_count\nFROM \n    SCRAPED_DATA\nGROUP BY \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[^,]+', 1, 1)\nORDER BY \n    group_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price having discount for 20-25th October 2025 as per check in date"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    CHECK_IN_DATE BETWEEN TO_DATE('20-10-2025', 'DD-MM-YYYY') AND TO_DATE('25-10-2025', 'DD-MM-YYYY')\n    AND DISCOUNTED_PRICE IS NOT NULL\nORDER BY \n    CHECK_IN_DATE;"
+        },
+        {
+            "role": "user",
+            "message": "List down hotels and their price having discount for 20-25th October 2025 as per check in date"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME, DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TO_DATE('20-10-2025', 'DD-MM-YYYY') AND TO_DATE('25-10-2025', 'DD-MM-YYYY')\nAND DISCOUNTED_PRICE IS NOT NULL;"
+        },
+        {
+            "role": "user",
+            "message": "List the top 30 hotel groups based on their counts "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, COUNT(*) AS HOTEL_COUNT\nFROM SCRAPED_DATA\nGROUP BY HOTEL_NAME\nORDER BY HOTEL_COUNT DESC\nFETCH FIRST 30 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "what you think hotel group create more progit than others"
+        },
+        {
+            "role": "assistant",
+            "message": "Based on the provided data, it's not possible to determine which hotel group creates more profit than others, as the dataset only shows the **HOTEL_COUNT** (presumably the number of hotels or rooms) for each hotel, but does not include financial metrics like revenue, occupancy rates, or profit margins.\n\nHowever, we can observe the following trends in the data:\n\n1. **Hotel Distribution**: The majority of hotels listed (29 out of 30) have the same **HOTEL_COUNT** of 84, while only one hotel, \"The Taj Mahal Palace, Mumbai,\" has a slightly higher count of 88.\n2. **Brands with Multiple Entries**: Some hotel brands, such as Taj, ITC, Ginger, and Lemon Tree, have multiple properties listed, suggesting they may have a larger presence or market share.\n\nWithout additional data on financial performance, it's not possible to make a data-driven conclusion about which hotel group generates more profit. To answer this question, we would need information on:\n\n* Revenue per hotel or room\n* Occupancy rates\n* Average daily rates (ADR)\n* Operating costs\n* Profit margins\n\nIf such data were available, we could analyze it to identify trends and make informed conclusions about the profitability of different hotel groups."
+        },
+        {
+            "role": "user",
+            "message": "Give me all data of hotels whose price is between 5000 and 10,000 for 20th oct 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE = TO_DATE('20-10-2025', 'DD-MM-YYYY')\n  AND DISCOUNTED_PRICE BETWEEN 5000 AND 10000;"
+        },
+        {
+            "role": "user",
+            "message": "List the top 30 hotel groups based on their counts \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT FULL_PROPERTY_NAME, COUNT(*) AS hotel_count\nFROM SCRAPED_DATA\nGROUP BY FULL_PROPERTY_NAME\nORDER BY hotel_count DESC\nFETCH FIRST 30 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "List the top 30 hotel groups based on their counts "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT FULL_PROPERTY_NAME, COUNT(*) AS hotel_count\nFROM SCRAPED_DATA\nGROUP BY FULL_PROPERTY_NAME\nORDER BY hotel_count DESC\nFETCH FIRST 30 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me analysis of this data"
+        },
+        {
+            "role": "assistant",
+            "message": "### **Descriptive Analysis of the Data**\n\nThe dataset provides information on hotel counts associated with various properties. Here are the key observations:\n\n1. **Most Common Hotel Count**:  \n   - The majority of properties (29 out of 32) have a hotel count of **84**.  \n   - Only 3 properties have a higher hotel count of **168**:  \n     - Vivanta Pune, Hinjawadi  \n     - Red Fox by Lemon Tree Hotels, East Delhi  \n     - The Oberoi Beach Resort, Sahl Hasheesh  \n\n2. **Property Distribution**:  \n   - The dataset includes a mix of luxury hotels (e.g., The Taj Mahal Palace, The Oberoi Marrakech), mid-range hotels (e.g., Ginger Mumbai Airport, Red Fox by Lemon Tree Hotels), and resorts (e.g., Taj Cidade de Goa Heritage, Gateway Goa).  \n   - Properties are spread across multiple cities and countries, including India, Egypt, Morocco, Thailand, Sri Lanka, and the UAE.  \n\n3. **Brands and Chains**:  \n   - Several properties belong to well-known hotel chains such as Taj, Oberoi, ITC, Marriott, and Lemon Tree.  \n   - IHCL SeleQtions is a recurring brand with multiple properties listed.  \n\n4. **Outliers**:  \n   - The three properties with a hotel count of 168 stand out as anomalies compared to the rest of the dataset, which is dominated by the count of 84.  \n\nIn summary, the data highlights a concentration of properties with a hotel count of 84, with a few exceptions at 168. The dataset covers a diverse range of hotel types and locations, with a notable presence of established hotel brands."
+        }
+    ]
+}

@@ -1,0 +1,140 @@
+{
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "give me data of hotel name and price of yesterday"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, ORIGINAL_PRICE\nFROM SCRAPED_DATA\nWHERE TRUNC(SCRAPED_DATETIME) = TRUNC(SYSDATE - 1);"
+        },
+        {
+            "role": "user",
+            "message": "give me the avg hotel price per location"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM SCRAPED_DATA\nWHERE TRUNC(SCRAPED_DATETIME) = TRUNC(SYSDATE - 1)\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and minimum price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    MIN(ORIGINAL_PRICE) AS MIN_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and avg price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    AVG(DISCOUNTED_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location vise minimum price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    MIN(DISCOUNTED_PRICE) AS MIN_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and minimum price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    MIN(ORIGINAL_PRICE) AS MIN_PRICE\nFROM \n    SCRAPED_DATA\nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(DISCOUNTED_PRICE) AS avg_price \nFROM \n    SCRAPED_DATA \nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(DISCOUNTED_PRICE) AS avg_price \nFROM \n    SCRAPED_DATA \nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and minimum price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    MIN(DISCOUNTED_PRICE) AS min_price \nFROM \n    SCRAPED_DATA \nGROUP BY \n    HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(DISCOUNTED_PRICE) AS avg_price \nFROM \n    SCRAPED_DATA \nGROUP BY \n    LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(ORIGINAL_PRICE) AS avg_price\nFROM SCRAPED_DATA\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and minimum price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, MIN(ORIGINAL_PRICE) AS min_price\nFROM SCRAPED_DATA\nGROUP BY HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(ORIGINAL_PRICE) AS avg_price\nFROM SCRAPED_DATA\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me hotel name and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available'\nGROUP BY \n    HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "give me location and avg price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available'\nGROUP BY \n    LOCATION;"
+        }
+    ]
+}

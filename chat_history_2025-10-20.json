@@ -1,0 +1,60 @@
+{
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "What are the major cities of hotels"
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "do you have all hotel prices data to answer the question"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME, ORIGINAL_PRICE, DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE ORIGINAL_PRICE IS NOT NULL OR DISCOUNTED_PRICE IS NOT NULL;"
+        },
+        {
+            "role": "user",
+            "message": "Provide top cities based on the hotel counts"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, COUNT(DISTINCT HOTEL_NAME) AS HOTEL_COUNT\nFROM SCRAPED_DATA\nGROUP BY LOCATION\nORDER BY HOTEL_COUNT DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Provide top cities based on the hotel counts"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, COUNT(DISTINCT CLIENT_HOTEL_ID) AS hotel_count\nFROM SCRAPED_DATA\nGROUP BY LOCATION\nORDER BY hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "List the top hotel groups based on their counts e.g. Taj, ITC, oberoi etc."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[A-Z][a-zA-Z ]+(?= Group| Hotels| Hotel| Resorts| Resort| Inn| Suites| Villa| Villas| Palace| Palaces| Residency| Residencies)') AS hotel_group,\n    COUNT(DISTINCT CLIENT_HOTEL_ID) AS hotel_count\nFROM \n    SCRAPED_DATA\nWHERE \n    FULL_PROPERTY_NAME IS NOT NULL\nGROUP BY \n    REGEXP_SUBSTR(FULL_PROPERTY_NAME, '[A-Z][a-zA-Z ]+(?= Group| Hotels| Hotel| Resorts| Resort| Inn| Suites| Villa| Villas| Palace| Palaces| Residency| Residencies)')\nHAVING \n    COUNT(DISTINCT CLIENT_HOTEL_ID) > 1\nORDER BY \n    hotel_count DESC;"
+        },
+        {
+            "role": "user",
+            "message": "what is daily average hotel price for the next 6 weeks"
+        },
+        {
+            "role": "assistant",
+            "message": "To predict the **daily average hotel price for the next 6 weeks**, we need additional data such as historical pricing trends, seasonality, occupancy rates, and market demand. Since the provided dataset only includes hotel counts by group, we cannot directly calculate or predict prices. However, here\u2019s a logical approach based on typical predictive analysis:\n\n1. **Assumption**: If historical pricing data were available, we would analyze trends (e.g., higher prices during peak seasons, lower prices during off-peak periods).\n2. **Market Factors**: Consider external factors like local events, holidays, or economic conditions that could influence pricing.\n3. **Hotel Segmentation**: Luxury hotels (e.g., The Oberoi, Four Seasons) would likely have higher prices compared to mid-range hotels (e.g., Lemon Tree, Holiday Inn).\n\n**Prediction**: Without specific data, we cannot provide a numerical prediction. However, if historical data showed a 5% weekly increase in prices due to upcoming peak season, the daily average price might rise incrementally over the next 6 weeks. For example:\n- Week 1: $150  \n- Week 2: $157.50  \n- Week 3: $165.38  \n- Week 4: $173.65  \n- Week 5: $182.33  \n- Week 6: $191.45  \n\n**Recommendation**: For accurate predictions, gather historical pricing data, occupancy rates, and market trends."
+        },
+        {
+            "role": "user",
+            "message": "list all unique dates and corresponding average discounted price contained in the dataset"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    DISTINCT TRUNC(CHECK_IN_DATE) AS unique_date,\n    AVG(DISCOUNTED_PRICE) AS avg_discounted_price\nFROM \n    SCRAPED_DATA\nWHERE \n    DISCOUNTED_PRICE IS NOT NULL\nGROUP BY \n    TRUNC(CHECK_IN_DATE)\nORDER BY \n    unique_date;"
+        }
+    ]
+}

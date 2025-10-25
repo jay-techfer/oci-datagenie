@@ -1,0 +1,132 @@
+{
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "give me list of hotel with discounted price and original price with difference of 10% in both price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE, \n    ORIGINAL_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    AND (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE <= 0.11;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotel with discounted price and original price with difference of from 10% to 25% in both price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE, \n    ORIGINAL_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    AND (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE <= 0.25;"
+        },
+        {
+            "role": "user",
+            "message": "with also there percentage difference "
+        },
+        {
+            "role": "assistant",
+            "message": "**Summary of Key Trends and Patterns:**\n\n1. **Price Variations Across Hotels:**\n   - **Lemon Tree Hotel Chennai** and **Lemon Tree Hotel, Tarudhan Valley, Manesar** show the highest original prices (up to \u20b924,438 and \u20b921,000 respectively) and discounted prices (up to \u20b921,994 and \u20b918,900).\n   - **Lemon Tree Hotel Whitefield, Bengaluru** and **Lemon Tree Hotel Chandigarh** have frequent entries with prices ranging from \u20b95,506 to \u20b99,950.\n   - **Lemon Tree Premier \u201cThe Atrium\u201d Ahmedabad** and **Lemon Tree Premier, Delhi Airport** have prices ranging from \u20b94,679 to \u20b925,000.\n\n2. **Discount Patterns:**\n   - Discounts vary significantly, with some hotels offering up to 20% off (e.g., Lemon Tree Hotel Chennai: \u20b924,438 \u2192 \u20b921,994, **14.3% discount**).\n   - Smaller discounts are common (e.g., Lemon Tree Hotel Whitefield, Bengaluru: \u20b96,118 \u2192 \u20b95,506, **10.0% discount**).\n\n3. **Hotel Distribution:**\n   - **Lemon Tree Hotel Whitefield, Bengaluru** and **Lemon Tree Hotel Chandigarh** appear most frequently, suggesting higher availability or demand.\n   - **Lemon Tree Premier properties** (e.g., Delhi Airport, Ahmedabad) have a wide price range, indicating varied room types or seasons.\n\n4. **Percentage Difference Calculation:**\n   - **Formula:** \\(\\frac{\\text{Original Price} - \\text{Discounted Price}}{\\text{Original Price}} \\times 100\\)\n   - **Example:** Lemon Tree Hotel Chennai (\u20b97,250 \u2192 \u20b96,525) \u2192 \\(\\frac{7250 - 6525}{7250} \\times 100 = 9.9\\%\\) discount.\n\n**Key Observations:**\n- **High Discounts:** Lemon Tree Hotel Chennai and Manesar properties often have discounts above 10%.\n- **Consistent Pricing:** Some hotels (e.g., Whitefield, Bengaluru) maintain small discounts across entries.\n- **Luxury Properties:** Premier and luxury hotels (e.g., St. James' Court, Aurika) have higher original prices but similar discount patterns.\n\n**Percentage Difference Examples:**\n- **Lemon Tree Hotel Chennai:** \u20b97,250 \u2192 \u20b96,525 \u2192 **9.9% discount**\n- **Lemon Tree Premier, Delhi Airport:** \u20b925,000 \u2192 \u20b918,800 \u2192 **24.8% discount**\n-"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotel with discounted price and original price with difference of from 10% to 25% in both price with there percentage "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE, \n    ORIGINAL_PRICE,\n    ROUND(((ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE) * 100, 2) AS PERCENTAGE_DIFFERENCE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    AND (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE <= 0.25;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming week "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available'\n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 7)\nORDER BY \n    ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming week "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, LOCATION, ORIGINAL_PRICE, CHECK_IN_DATE\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\n  AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 7\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price from upcoming monday"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, LOCATION, ORIGINAL_PRICE, CHECK_IN_DATE\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\n  AND CHECK_IN_DATE BETWEEN NEXT_DAY(TRUNC(SYSDATE), 'MONDAY') AND NEXT_DAY(TRUNC(SYSDATE), 'MONDAY') + 7\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price for a week from upcoming monday"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, LOCATION, ORIGINAL_PRICE, CHECK_IN_DATE\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\n  AND CHECK_IN_DATE BETWEEN NEXT_DAY(TRUNC(SYSDATE), 'MONDAY') + 7 AND NEXT_DAY(TRUNC(SYSDATE), 'MONDAY') + 14\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming week"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, LOCATION, ORIGINAL_PRICE, CHECK_IN_DATE\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\n  AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 7\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming sunday to next sunday"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, LOCATION, ORIGINAL_PRICE, CHECK_IN_DATE\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\n  AND CHECK_IN_DATE BETWEEN NEXT_DAY(TRUNC(SYSDATE), 'SUNDAY') AND NEXT_DAY(TRUNC(SYSDATE), 'SUNDAY') + 7\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "What is the average discount price per city for next 14 days \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(DISCOUNTED_PRICE) AS AVG_DISCOUNT_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 14\nGROUP BY LOCATION\nORDER BY AVG_DISCOUNT_PRICE DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me list of hotels with discounted price and original price with difference of 10 % in both price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE, \n    ORIGINAL_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    OR \n    (DISCOUNTED_PRICE - ORIGINAL_PRICE) / DISCOUNTED_PRICE >= 0.1;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with there location and price with its check in date which available and have the highest price in upcoming week "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 7)\nORDER BY \n    ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me list of hotels with there original price and discounted price with difference of 10% in both price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    ORIGINAL_PRICE, \n    DISCOUNTED_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    OR \n    (DISCOUNTED_PRICE - ORIGINAL_PRICE) / DISCOUNTED_PRICE >= 0.1;"
+        },
+        {
+            "role": "user",
+            "message": "what data do you have?"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available';"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have highest price in upcoming week"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 7)\nORDER BY \n    ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        }
+    ]
+}

@@ -1,0 +1,404 @@
+{
+    "DEMOUSER": [
+        {
+            "role": "user",
+            "message": "give me all data of top 5 hotels as per high price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 5 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "ok give me the column name from this data"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT COLUMN_NAME\nFROM (\n    SELECT COLUMN_NAME\n    FROM USER_TAB_COLUMNS\n    WHERE TABLE_NAME = 'SCRAPED_DATA'\n)\nWHERE ROWNUM = 1;"
+        },
+        {
+            "role": "user",
+            "message": "all column names"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT COLUMN_NAME\nFROM USER_TAB_COLUMNS\nWHERE TABLE_NAME = 'SCRAPED_DATA'\nORDER BY COLUMN_ID;"
+        },
+        {
+            "role": "user",
+            "message": "give me all data of top 20 hotels as per highest price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me all data of top 20 hotels as per heighest price which are available"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE AVAILABILITY = 'Available'\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Show me all hotels in Jaipur with a discounted price above \u20b93,00,00"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur' AND DISCOUNTED_PRICE > 300000;"
+        },
+        {
+            "role": "user",
+            "message": "What\u2019s the average discounted price per city for the next 14 days?"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(DISCOUNTED_PRICE) AS AVG_DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 14\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "Compare the average discount percentage per hotel."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME,\n    ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\nFROM SCRAPED_DATA\nWHERE ORIGINAL_PRICE > 0\nGROUP BY HOTEL_NAME\nORDER BY AVG_DISCOUNT_PERCENTAGE DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Calculate the average discount percentage per location for each week."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION,\n    EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n    ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\nFROM SCRAPED_DATA\nWHERE ORIGINAL_PRICE > 0\nGROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\nORDER BY LOCATION, WEEK_NUMBER;"
+        },
+        {
+            "role": "user",
+            "message": "Calculate the average discount percentage per location for each week. from 23 oct 2025"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION,\n    EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n    ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE >= TO_DATE('23-10-2025', 'DD-MM-YYYY')\nAND ORIGINAL_PRICE > 0\nGROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\nORDER BY LOCATION, WEEK_NUMBER;"
+        },
+        {
+            "role": "user",
+            "message": "Calculate the average discount percentage per location for last and this week"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH LastWeek AS (\n    SELECT \n        EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n        LOCATION,\n        ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\n    FROM SCRAPED_DATA\n    WHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) - 7 AND TRUNC(SYSDATE) - 1\n    AND ORIGINAL_PRICE > 0\n    GROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\n),\nThisWeek AS (\n    SELECT \n        EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n        LOCATION,\n        ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\n    FROM SCRAPED_DATA\n    WHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 7\n    AND ORIGINAL_PRICE > 0\n    GROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\n)\nSELECT * FROM LastWeek\nUNION ALL\nSELECT * FROM ThisWeek\nORDER BY LOCATION, WEEK_NUMBER;"
+        },
+        {
+            "role": "user",
+            "message": "Highlight hotels where discounts have increased compared to the previous week."
+        },
+        {
+            "role": "assistant",
+            "message": "WITH WeeklyDiscounts AS (\n    SELECT \n        HOTEL_NAME,\n        EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n        ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\n    FROM SCRAPED_DATA\n    WHERE ORIGINAL_PRICE > 0\n    GROUP BY HOTEL_NAME, EXTRACT(WEEK FROM CHECK_IN_DATE)\n),\nPreviousWeekDiscounts AS (\n    SELECT \n        HOTEL_NAME,\n        WEEK_NUMBER,\n        AVG_DISCOUNT_PERCENTAGE AS PREV_WEEK_DISCOUNT\n    FROM WeeklyDiscounts\n    WHERE WEEK_NUMBER = (\n        SELECT MAX(WEEK_NUMBER) - 1 \n        FROM WeeklyDiscounts\n    )\n),\nCurrentWeekDiscounts AS (\n    SELECT \n        HOTEL_NAME,\n        WEEK_NUMBER,\n        AVG_DISCOUNT_PERCENTAGE AS CURR_WEEK_DISCOUNT\n    FROM WeeklyDiscounts\n    WHERE WEEK_NUMBER = (\n        SELECT MAX(WEEK_NUMBER) \n        FROM WeeklyDiscounts\n    )\n)\nSELECT \n    c.HOTEL_NAME,\n    p.PREV_WEEK_DISCOUNT,\n    c.CURR_WEEK_DISCOUNT\nFROM CurrentWeekDiscounts c\nJOIN PreviousWeekDiscounts p ON c.HOTEL_NAME = p.HOTEL_NAME\nWHERE c.CURR_WEEK_DISCOUNT > p.PREV_WEEK_DISCOUNT\nORDER BY c.HOTEL_NAME;"
+        },
+        {
+            "role": "user",
+            "message": "Show me the occupancy and discounted price for all hotels."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME,\n    OCCUPANCY,\n    DISCOUNTED_PRICE\nFROM SCRAPED_DATA;"
+        },
+        {
+            "role": "user",
+            "message": "What\u2019s the correlation between occupancy and discounted price?"
+        },
+        {
+            "role": "assistant",
+            "message": "\u274c Error: {'target_service': 'generative_ai_inference', 'status': 400, 'code': '400', 'opc-request-id': 'ECBFC9FF4EE742D5BAA8F81242E6A728/54B94F2C053EE7673F70C61A9AD01971/17F6A18158288EEA98CA2FF5FB560767', 'message': '{\"id\":\"ECBFC9FF4EE742D5BAA8F81242E6A728/54B94F2C053EE7673F70C61A9AD01971/17F6A18158288EEA98CA2FF5FB560767\",\"message\":\"too many tokens: size limit exceeded by 444383 tokens. Try using shorter or fewer inputs. The limit for this model is 288000 tokens.\"}', 'operation_name': 'chat', 'timestamp': '2025-10-23T02:18:24.093797+00:00', 'client_version': 'Oracle-PythonSDK/2.161.0', 'request_endpoint': 'POST https://inference.generativeai.us-chicago-1.oci.oraclecloud.com/20231130/actions/chat', 'logging_tips': 'To get more info on the failing request, refer to https://docs.oracle.com/en-us/iaas/tools/python/latest/logging.html for ways to log the request/response details.', 'troubleshooting_tips': \"See https://docs.oracle.com/iaas/Content/API/References/apierrors.htm#apierrors_400__400_400 for more information about resolving this error. Also see https://docs.oracle.com/iaas/api/#/en/generative-ai-inference/20231130/ChatResult/Chat for details on this operation's requirements. If you are unable to resolve this generative_ai_inference issue, please contact Oracle support and provide them this full error message.\"}"
+        },
+        {
+            "role": "user",
+            "message": "Show me the original price and discounted price for all hotels in the last 2 weeks."
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME,\n    ORIGINAL_PRICE,\n    DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) - 14 AND TRUNC(SYSDATE);"
+        },
+        {
+            "role": "user",
+            "message": "from this data Calculate the average discount percentage per location for each week."
+        },
+        {
+            "role": "assistant",
+            "message": "WITH WeeklyDiscounts AS (\n    SELECT \n        LOCATION,\n        EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NUMBER,\n        ROUND(AVG((1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100), 2) AS AVG_DISCOUNT_PERCENTAGE\n    FROM SCRAPED_DATA\n    WHERE ORIGINAL_PRICE > 0\n    GROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\n)\nSELECT *\nFROM WeeklyDiscounts\nORDER BY LOCATION, WEEK_NUMBER;"
+        },
+        {
+            "role": "user",
+            "message": "run this query \nSELECT \n  LOCATION,\n  WEEK(CHECK_IN_DATE) AS WEEK_NO,\n  AVG((ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE * 100) AS AVG_DISCOUNT_PCT\nFROM hotel_data\nGROUP BY LOCATION, WEEK(CHECK_IN_DATE)\nORDER BY LOCATION, WEEK_NO;\n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n  LOCATION,\n  EXTRACT(WEEK FROM CHECK_IN_DATE) AS WEEK_NO,\n  ROUND(AVG((ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE * 100), 2) AS AVG_DISCOUNT_PCT\nFROM SCRAPED_DATA\nWHERE ORIGINAL_PRICE > 0\nGROUP BY LOCATION, EXTRACT(WEEK FROM CHECK_IN_DATE)\nORDER BY LOCATION, WEEK_NO;"
+        },
+        {
+            "role": "user",
+            "message": "Which hotels are offering consistent discounts over 20% for 3 or more days in a row?"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH DiscountedHotels AS (\n    SELECT \n        HOTEL_NAME,\n        CHECK_IN_DATE,\n        (1 - (DISCOUNTED_PRICE / ORIGINAL_PRICE)) * 100 AS DISCOUNT_PERCENTAGE\n    FROM SCRAPED_DATA\n    WHERE ORIGINAL_PRICE > 0\n),\nRankedDiscounts AS (\n    SELECT \n        HOTEL_NAME,\n        CHECK_IN_DATE,\n        DISCOUNT_PERCENTAGE,\n        ROW_NUMBER() OVER (PARTITION BY HOTEL_NAME ORDER BY CHECK_IN_DATE) AS RN\n    FROM DiscountedHotels\n    WHERE DISCOUNT_PERCENTAGE > 20\n),\nConsecutiveDiscounts AS (\n    SELECT \n        a.HOTEL_NAME,\n        a.CHECK_IN_DATE AS START_DATE,\n        b.CHECK_IN_DATE AS END_DATE,\n        COUNT(*) AS CONSECUTIVE_DAYS\n    FROM RankedDiscounts a\n    JOIN RankedDiscounts b ON a.HOTEL_NAME = b.HOTEL_NAME\n        AND a.RN = b.RN - (b.CHECK_IN_DATE - a.CHECK_IN_DATE)\n    GROUP BY a.HOTEL_NAME, a.CHECK_IN_DATE, b.CHECK_IN_DATE\n    HAVING COUNT(*) >= 3\n)\nSELECT DISTINCT HOTEL_NAME\nFROM ConsecutiveDiscounts;"
+        },
+        {
+            "role": "user",
+            "message": "which city is likely to have the highest price next week.\u201d"
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of city is likely to have the highest price next week.\u201d"
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of city which have the highest price next week "
+        },
+        {
+            "role": "assistant",
+            "message": "Please ask for data first!"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of hotels which have the highest price next week"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) + 1 AND TRUNC(SYSDATE) + 7\nORDER BY ORIGINAL_PRICE DESC\nFETCH FIRST 1 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of list of hotels which have the highest price next week"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextWeekPrices AS (\n    SELECT \n        HOTEL_NAME,\n        ORIGINAL_PRICE\n    FROM SCRAPED_DATA\n    WHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) + 1 AND TRUNC(SYSDATE) + 7\n),\nMaxPrice AS (\n    SELECT \n        MAX(ORIGINAL_PRICE) AS MAX_PRICE\n    FROM NextWeekPrices\n)\nSELECT sd.*\nFROM SCRAPED_DATA sd\nJOIN NextWeekPrices nwp ON sd.HOTEL_NAME = nwp.HOTEL_NAME\nJOIN MaxPrice mp ON nwp.ORIGINAL_PRICE = mp.MAX_PRICE\nWHERE sd.CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) + 1 AND TRUNC(SYSDATE) + 7;"
+        },
+        {
+            "role": "user",
+            "message": "what is the average discounted price per city for next 14 days"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    LOCATION, \n    AVG(DISCOUNTED_PRICE) AS AVG_DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) + 1 AND TRUNC(SYSDATE) + 14\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "ok so what do you think as per budget of 80000 rs which will be suitable location for me to visit if i leave in delhi"
+        },
+        {
+            "role": "assistant",
+            "message": "Based on your budget of \u20b980,000 and your location in Delhi, here are some suitable destinations from the dataset:\n\n1. **Jaipur**: With an average price of \u20b939,462.6, Jaipur offers a mix of heritage and culture, making it a great option within your budget.  \n2. **Agra**: At \u20b937,141.5, Agra is home to the iconic Taj Mahal and other historical sites, fitting well within your budget.  \n3. **Udaipur**: With an average price of \u20b940,678.2, Udaipur is known for its lakes, palaces, and romantic ambiance, still within your budget.  \n4. **Rishikesh**: At \u20b946,990.4, Rishikesh is a spiritual and adventure hub, slightly closer to your budget limit but manageable.  \n5. **Darjeeling**: With an average price of \u20b926,311.5, Darjeeling offers scenic beauty and a peaceful retreat, well within your budget.  \n6. **Shimla**: At \u20b923,524.4, Shimla is a classic hill station with colonial charm, comfortably within your budget.  \n\nFor international options:  \n7. **Bangkok (Sathorn)**: At \u20b951,952.7, Bangkok offers vibrant culture, food, and nightlife, though slightly higher, it\u2019s still within reach.  \n8. **Dubai (Downtown)**: At \u20b937,206.5, Dubai provides luxury and modern attractions, fitting well within your budget.  \n\n**Recommendations**:  \n- **Domestic**: Jaipur or Agra for a heritage-rich experience.  \n- **International**: Dubai for a modern and luxurious getaway.  \n\nLet me know if you'd like more details on any of these!"
+        },
+        {
+            "role": "user",
+            "message": "show me all the hotels from jaipur with the discounted price above 30000"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE > 30000;"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of list of hotels which have the highest price for next week"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextWeek AS (\n    SELECT TRUNC(SYSDATE) + 7 AS next_week_start,\n           TRUNC(SYSDATE) + 14 AS next_week_end\n    FROM DUAL\n)\nSELECT sd.*\nFROM SCRAPED_DATA sd, NextWeek nw\nWHERE sd.CHECK_IN_DATE >= nw.next_week_start\n  AND sd.CHECK_IN_DATE < nw.next_week_end\nORDER BY sd.DISCOUNTED_PRICE DESC\nFETCH FIRST 1 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me the data of top 20 hotels which have the highest price for next week"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextWeek AS (\n    SELECT TRUNC(SYSDATE) + 7 AS next_week_start,\n           TRUNC(SYSDATE) + 14 AS next_week_end\n    FROM DUAL\n)\nSELECT sd.*\nFROM SCRAPED_DATA sd, NextWeek nw\nWHERE sd.CHECK_IN_DATE >= nw.next_week_start\n  AND sd.CHECK_IN_DATE < nw.next_week_end\nORDER BY sd.DISCOUNTED_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of all hotels which have the highest price next week "
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextWeek AS (\n    SELECT TRUNC(SYSDATE) + 7 AS next_week_start,\n           TRUNC(SYSDATE) + 14 AS next_week_end\n    FROM DUAL\n),\nMaxPrice AS (\n    SELECT MAX(DISCOUNTED_PRICE) AS max_price\n    FROM SCRAPED_DATA sd, NextWeek nw\n    WHERE sd.CHECK_IN_DATE >= nw.next_week_start\n      AND sd.CHECK_IN_DATE < nw.next_week_end\n)\nSELECT sd.*\nFROM SCRAPED_DATA sd, NextWeek nw, MaxPrice mp\nWHERE sd.CHECK_IN_DATE >= nw.next_week_start\n  AND sd.CHECK_IN_DATE < nw.next_week_end\n  AND sd.DISCOUNTED_PRICE = mp.max_price;"
+        },
+        {
+            "role": "user",
+            "message": "give me the list of available hotels which have highest price next week in jaipur"
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextWeek AS (\n    SELECT TRUNC(SYSDATE) + 7 AS next_week_start,\n           TRUNC(SYSDATE) + 14 AS next_week_end\n    FROM DUAL\n),\nMaxPrice AS (\n    SELECT MAX(DISCOUNTED_PRICE) AS max_price\n    FROM SCRAPED_DATA sd, NextWeek nw\n    WHERE sd.CHECK_IN_DATE >= nw.next_week_start\n      AND sd.CHECK_IN_DATE < nw.next_week_end\n      AND sd.LOCATION = 'Jaipur'\n      AND sd.AVAILABILITY = 'Available'\n)\nSELECT sd.*\nFROM SCRAPED_DATA sd, NextWeek nw, MaxPrice mp\nWHERE sd.CHECK_IN_DATE >= nw.next_week_start\n  AND sd.CHECK_IN_DATE < nw.next_week_end\n  AND sd.LOCATION = 'Jaipur'\n  AND sd.AVAILABILITY = 'Available'\n  AND sd.DISCOUNTED_PRICE = mp.max_price;"
+        },
+        {
+            "role": "user",
+            "message": "what is the average discounted price per city for the next 14 days "
+        },
+        {
+            "role": "assistant",
+            "message": "WITH NextTwoWeeks AS (\n    SELECT TRUNC(SYSDATE) AS today,\n           TRUNC(SYSDATE) + 14 AS two_weeks_later\n    FROM DUAL\n)\nSELECT sd.LOCATION,\n       AVG(sd.DISCOUNTED_PRICE) AS avg_discounted_price\nFROM SCRAPED_DATA sd, NextTwoWeeks ntw\nWHERE sd.CHECK_IN_DATE >= ntw.today\n  AND sd.CHECK_IN_DATE <= ntw.two_weeks_later\nGROUP BY sd.LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "what you think my budget is 80000 for 2 days treap i leave in delhi which city will be best match for mr "
+        },
+        {
+            "role": "assistant",
+            "message": "Based on your budget of \u20b980,000 for a 2-day trip from Delhi, here are the best city recommendations:\n\n1. **Jaipur**  \n   - **Avg. Discounted Price**: \u20b938,667.9  \n   - **Why**: Close to Delhi (3-4 hours by train/car), offers a mix of heritage (Amer Fort, City Palace) and vibrant markets. Your budget allows for premium stays and experiences.  \n\n2. **Agra**  \n   - **Avg. Discounted Price**: \u20b937,268.2  \n   - **Why**: Ideal for a short trip to see the Taj Mahal and Agra Fort. Luxury hotels and guided tours fit within your budget.  \n\n3. **Udaipur**  \n   - **Avg. Discounted Price**: \u20b940,577.5  \n   - **Why**: Known for lakes, palaces (Lake Palace, City Palace), and romantic ambiance. Your budget supports high-end stays and boat rides.  \n\n4. **Jodhpur**  \n   - **Avg. Discounted Price**: \u20b947,407.6  \n   - **Why**: Blue City with Mehrangarh Fort and Umaid Bhawan Palace. Slightly pricier, but your budget can accommodate luxury options.  \n\n5. **Chandigarh**  \n   - **Avg. Discounted Price**: \u20b920,211.8  \n   - **Why**: Modern city with attractions like Rock Garden and Sukhna Lake. Budget-friendly for premium stays and dining.  \n\n6. **Amritsar**  \n   - **Avg. Discounted Price**: \u20b911,165.1  \n   - **Why**: Perfect for a spiritual and cultural trip (Golden Temple, Wagah Border). Leaves room for luxury stays and local cuisine.  \n\n**Top Pick**: **Jaipur** or **Agra** for their proximity, iconic landmarks, and alignment with your budget for a premium 2-day experience.  \n\n**Next Steps**:  \n- Book a luxury hotel in Jaipur (e.g., Rambagh Palace) or Agra (e.g., Taj Hotel).  \n- Include guided tours and local experiences (e.g., Jaipur\u2019s light show or Agra\u2019s Mehtab Bagh sunset).  \n- Allocate \u20b910,000-15,000 for travel (flight/train + local transport)."
+        },
+        {
+            "role": "user",
+            "message": "show all the hotels from jaipur with the discounted price  above 30000"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE > 30000;"
+        },
+        {
+            "role": "user",
+            "message": "give me all the data of all the hotels from jaipur with the discounted price above 30000"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT *\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE > 30000;"
+        },
+        {
+            "role": "user",
+            "message": "give me the list of all hotels which have highest price for next and which are availabale"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME\nFROM (\n    SELECT HOTEL_NAME, DISCOUNTED_PRICE, ROW_NUMBER() OVER (PARTITION BY HOTEL_NAME ORDER BY DISCOUNTED_PRICE DESC) AS RN\n    FROM SCRAPED_DATA\n    WHERE AVAILABILITY = 'Available'\n)\nWHERE RN = 1;"
+        },
+        {
+            "role": "user",
+            "message": "give the data of avearae dicount per city for next 14 days"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, \n       AVG(DISCOUNTED_PRICE) AS AVG_DISCOUNT\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 14\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "i have budget of 80000 and i leave in delhi planning for 2 day tream which city will e=recommend me "
+        },
+        {
+            "role": "assistant",
+            "message": "Based on your budget of \u20b980,000 and your location in Delhi, here are some recommended cities for a 2-day trip, considering the average discounts available:\n\n1. **Jaipur** (\u20b938,667.9 avg. discount)  \n   - Offers significant savings, allowing you to explore attractions like Amer Fort and local markets within your budget.\n\n2. **Agra** (\u20b937,268.2 avg. discount)  \n   - Ideal for visiting the Taj Mahal and nearby sites, with ample budget left for accommodation and dining.\n\n3. **Haridw\u0101r** (\u20b935,214.3 avg. discount)  \n   - A spiritual retreat with budget-friendly options for ghats, temples, and local experiences.\n\n4. **Rish\u012bkesh** (\u20b947,245.5 avg. discount)  \n   - Perfect for adventure and relaxation, with discounts making it affordable for a short trip.\n\n5. **Dehradun** (\u20b99,632 avg. discount)  \n   - A quieter option with lower costs, suitable for a relaxed getaway within your budget.\n\n**Recommendation**: **Jaipur** or **Agra** are excellent choices due to their high average discounts, allowing you to maximize your budget while enjoying key attractions."
+        },
+        {
+            "role": "user",
+            "message": "list top 30 hotel group on their count"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT FULL_PROPERTY_NAME, COUNT(*) AS hotel_count\nFROM SCRAPED_DATA\nGROUP BY FULL_PROPERTY_NAME\nORDER BY hotel_count DESC\nFETCH FIRST 30 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotels from jaipur where discounted price is less tha 30000"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE < 30000;"
+        },
+        {
+            "role": "user",
+            "message": "with there price "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT HOTEL_NAME, DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE < 30000;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of alll hotel with there availability "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME, AVAILABILITY\nFROM SCRAPED_DATA;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotels from jaipur where discounted price is less tha 30000"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT DISTINCT HOTEL_NAME, DISCOUNTED_PRICE, AVAILABILITY\nFROM SCRAPED_DATA\nWHERE LOCATION = 'Jaipur'\nAND DISCOUNTED_PRICE < 30000;"
+        },
+        {
+            "role": "user",
+            "message": "without the hotel name "
+        },
+        {
+            "role": "assistant",
+            "message": "The dataset shows a wide range of **discounted prices** for hotels in Jaipur, with **availability** consistently marked as \"Available\" across all entries. Key observations include:\n\n1. **Price Distribution**: Prices vary significantly, ranging from **\u20b92,699** to **\u20b926,000**.  \n2. **Frequent Price Points**: The **Red Fox by Lemon Tree Hotels** has the most entries, with prices ranging from **\u20b92,768** to **\u20b96,075**, indicating a budget-friendly option.  \n3. **Luxury Pricing**: Hotels like **ITC Rajputana**, **Jai Mahal Palace**, and **Ramgarh Lodge** have higher prices, ranging from **\u20b912,500** to **\u20b926,000**, reflecting their luxury status.  \n4. **Mid-Range Options**: **Sarovar Premiere Jaipur** and **Ginger Jaipur** offer mid-range prices, with **Sarovar Premiere** ranging from **\u20b94,679** to **\u20b919,799** and **Ginger Jaipur** from **\u20b92,699** to **\u20b98,499**.  \n5. **Taj Devi Ratn Resort & Spa**: Prices range from **\u20b912,250** to **\u20b922,000**, positioning it as a premium but slightly more affordable luxury option.  \n\nOverall, the data highlights a diverse pricing spectrum, catering to various budgets and preferences."
+        },
+        {
+            "role": "user",
+            "message": "What is the average discount price per city for next 14 days \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT LOCATION, AVG(DISCOUNTED_PRICE) AS AVG_DISCOUNTED_PRICE\nFROM SCRAPED_DATA\nWHERE CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE) + 14\nGROUP BY LOCATION;"
+        },
+        {
+            "role": "user",
+            "message": "give me list of hotel with discounted price and original price with difference of 10% in both price"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    DISCOUNTED_PRICE, \n    ORIGINAL_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    (ORIGINAL_PRICE - DISCOUNTED_PRICE) / ORIGINAL_PRICE >= 0.1\n    OR \n    (DISCOUNTED_PRICE - ORIGINAL_PRICE) / DISCOUNTED_PRICE >= 0.1;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming week "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Yes' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 7)\nORDER BY \n    ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "Give me the list of all hotels which are available and have the highest price next week \n"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Yes' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE + 7) AND TRUNC(SYSDATE + 14)\nORDER BY \n    ORIGINAL_PRICE DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me the list of all hotels which are available and have the highest price next week"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE + 7) AND TRUNC(SYSDATE + 14)\nORDER BY \n    ORIGINAL_PRICE DESC;"
+        },
+        {
+            "role": "user",
+            "message": "Give me top 20 hotels along with the location and price with its check in date which are available and have the highest price in upcoming week"
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    HOTEL_NAME, \n    LOCATION, \n    ORIGINAL_PRICE, \n    CHECK_IN_DATE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available' \n    AND CHECK_IN_DATE BETWEEN TRUNC(SYSDATE) AND TRUNC(SYSDATE + 7)\nORDER BY \n    ORIGINAL_PRICE DESC\nFETCH FIRST 20 ROWS ONLY;"
+        },
+        {
+            "role": "user",
+            "message": "just give me avg price per check in date "
+        },
+        {
+            "role": "assistant",
+            "message": "SELECT \n    TO_CHAR(CHECK_IN_DATE, 'YYYY-MM-DD') AS CHECK_IN_DATE,\n    AVG(ORIGINAL_PRICE) AS AVG_PRICE\nFROM \n    SCRAPED_DATA\nWHERE \n    AVAILABILITY = 'Available'\nGROUP BY \n    TO_CHAR(CHECK_IN_DATE, 'YYYY-MM-DD')\nORDER BY \n    CHECK_IN_DATE;"
+        }
+    ]
+}
